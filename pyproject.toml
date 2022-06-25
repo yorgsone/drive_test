@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "drive_test"
+version = "0.0.1"
+description = "upload/download/corruption scenario"
+authors = ["Georgios Maroulas <giorgos@maroulas.net>"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+google-api-python-client = "^2.51.0"
+oauth2client = "^4.1.3"
+google-auth-httplib2 = "^0.1.0"
+google-auth-oauthlib = "^0.5.2"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
