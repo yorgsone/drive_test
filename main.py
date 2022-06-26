@@ -9,7 +9,7 @@ DOWNLOADS_DIR = '.'
 
 def compare_files(a, b) -> bool:
     """computes the hash of each file and compares them
-    returns True if they are the equal"""
+    returns True if they are equal"""
     BUF_SIZE = 4096
 
     a_hashed = hashlib.sha1()
@@ -28,7 +28,6 @@ def compare_files(a, b) -> bool:
             if not data:
                 break
             b_hashed.update(data)
-    print(a_hashed.hexdigest() , b_hashed.hexdigest())
     return a_hashed.hexdigest() == b_hashed.hexdigest()
 
 class google_driver():
@@ -68,11 +67,11 @@ class google_driver():
             print(f"Error while uploading file {filename}")
             return False
         finally:
-            self.downloaded_file
+            self.downloaded_file = None
 
     def download_last_file(self) -> str:
         """downloads the file that the last call to upload_file uploaded and returns the downloaded file's name"""
-        if not self.is_uploaded():
+        if not self.is_last_file_uploaded():
             raise 'last_file is None'
 
         with tempfile.NamedTemporaryFile(suffix='_'+os.path.basename(os.path.normpath(self.last_file[0])), dir=DOWNLOADS_DIR, delete=False) as df:
@@ -86,7 +85,7 @@ class google_driver():
             self.downloaded_file = df.name
             return df.name
 
-    def is_uploaded(self):
+    def is_last_file_uploaded(self):
         if self.last_file is None:
             return False
         try:
