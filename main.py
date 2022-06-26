@@ -3,13 +3,37 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload, HttpError
 import io
 import tempfile
 import os
+import hashlib
 
 DOWNLOADS_DIR = '.'
 
+def compare_files(a, b) -> bool:
+    """computes the hash of each file and compares them
+    returns True if they are the equal"""
+    BUF_SIZE = 65536
+
+    a_hashed = hashlib.sha1()
+    b_hashed = hashlib.sha1()
+   
+    with open(a, 'rb') as f:
+        while True:
+            data = f.read(BUF_SIZE)
+            if not data:
+                break
+            a_hashed.update(data)
+    
+    with open(b, 'rb') as f:
+        while True:
+            data = f.read(BUF_SIZE)
+            if not data:
+                break
+            b_hashed.update(data)
+    print(a_hashed.hexdigest() , b_hashed.hexdigest())
+    return a_hashed.hexdigest() == b_hashed.hexdigest()
 
 class google_driver():
-    originalFileHash = None
-    lastFile = None
+    last_file = None
+    downloaded_file = None
     service = None
 
     def __new__(cls):
@@ -21,16 +45,15 @@ class google_driver():
             return None
 
     def upload_file(self, filename) -> bool:
-        """uploads the file given and updates the class variable lastFile and returns True if successful"""
+        """uploads the file given and updates the class variable last_file and returns True if successful"""
         file_metadata = {
-            'name': filename,
+            'name': os.path.basename(os.path.normpath(filename)),
             'mimeType': '*/*',
         }
         if not os.path.isfile(filename):
-            lastFile = None
-            originalFileHash = None
-            print(f"{filename} does not exist")
-            return False
+            self.last_file = None
+            self.downloaded_file = None
+            raise FileNotFoundError
 
         media = MediaFileUpload(filename,
                                 mimetype=file_metadata['mimeType'],
@@ -38,42 +61,43 @@ class google_driver():
         try:
             file = self.service.files().create(
                 body=file_metadata, media_body=media, fields='id').execute()
-            if file is not None:
-                self.lastFile = (filename, file['id'])
-                print(f"file {filename} uploaded")
+            self.last_file = (filename, file['id'])
+            print(f"file {filename} uploaded")
+            return True
         except Exception as e:
             print(f"Error while uploading file {filename}")
             return False
-        return True
+        finally:
+            self.downloaded_file
 
-    def download_lastFile(self) -> str:
+    def download_last_file(self) -> str:
         """downloads the file that the last call to upload_file uploaded and returns the downloaded file's name"""
-        if not self.isUploaded():
-            return None
+        if not self.is_uploaded():
+            raise 'last_file is None'
 
-        with tempfile.NamedTemporaryFile(suffix='_'+self.lastFile[0], dir=DOWNLOADS_DIR, delete=False) as df:
-            request = self.service.files().get_media(fileId=self.lastFile[1])
+        with tempfile.NamedTemporaryFile(suffix='_'+os.path.basename(os.path.normpath(self.last_file[0])), dir=DOWNLOADS_DIR, delete=False) as df:
+            request = self.service.files().get_media(fileId=self.last_file[1])
             fh = io.BytesIO()
             downloader = MediaIoBaseDownload(fh, request)
             done = False
             while done is False:
                 status, done = downloader.next_chunk()
                 df.write(fh.getbuffer())
+            self.downloaded_file = df.name
             return df.name
 
-    def isUploaded(self, fileId=None):
-        if fileId is None:
-            if self.lastFile is None:
-                return None
-            fileId = self.lastFile[1]
+    def is_uploaded(self):
+        if self.last_file is None:
+            return False
         try:
-            metadata = self.service.files().get(fileId=fileId, fields='id').execute()
+            metadata = self.service.files().get(fileId=self.last_file[1], fields='id').execute()
             return True
         except Exception:
             return False
 
-    def list_files(self):
+    def list_files(self) -> list:
         pageToken = ''
+        all_files_on_drive = []
         print('Files:')
         while pageToken is not None:
             try:
@@ -85,19 +109,42 @@ class google_driver():
             items = results.get('files', [])
             if not items:
                 print('No files found.')
-                return
+                break
             for item in items:
                 print(f"{item['name']} ({item['id']})")
+                all_files_on_drive.append((item['name'], item['id']))
             pageToken = results.get('nextPageToken')
+        return all_files_on_drive
 
-    def delete_file(self, fileId=None):
-        """deletes file with the given fileId from google Drive and if fileId is None, the lastFile is getting deleted"""
-        if fileId is None:
-            if self.lastFile is None:
-                return
-            fileId = self.lastFile[1]
+    def delete_last_file(self):
+        """deletes last_file from google Drive"""
+        if self.last_file is None:
+            raise 'last_file is None'
+        try:
+            self.service.files().delete(fileId=self.last_file[1]).execute()
+            print(f"deleted {self.last_file[1]}")
+        except HttpError as error:
+            print(f"An error occurred while deleting fileId: {self.last_file[1]}", error)
+
+    def delete_file(self, fileId)->bool:
+        """given a fileId, deletes a file from google drive and return True if successful"""
+        if fileId == '' or fileId == None:
+            return False
         try:
             self.service.files().delete(fileId=fileId).execute()
             print(f"deleted {fileId}")
+            return True
         except HttpError as error:
             print(f"An error occurred while deleting fileId: {fileId}", error)
+            return False
+
+gd = google_driver()
+#gd.upload_file('/Users/giorgosmaroulas/Downloads/fr_certificate_2021-2022_gemaroul.pdf')
+all_files = gd.list_files()
+print(all_files)
+#gd.download_last_file()
+
+#print(gd.download_last_file())
+#if compare_files(gd.last_file[0], gd.downloaded_file):
+#    print("same files")
+#gd.delete_last_file()
