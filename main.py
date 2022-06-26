@@ -31,9 +31,9 @@ def compare_files(a, b) -> bool:
     return a_hashed.hexdigest() == b_hashed.hexdigest()
 
 class google_driver():
-    last_file = None
-    downloaded_file = None
-    service = None
+    last_file = None #tuple (file name, fileId)
+    downloaded_file = None #just the path of the downloaded file
+    service = None #the client for google cloud api
 
     def __new__(cls):
         try:
