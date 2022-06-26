@@ -6,6 +6,7 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload, HttpError
 
 DOWNLOADS_DIR = '.'
 
+
 class google_driver():
     last_file = None  # tuple (file name, fileId)
     downloaded_file = None  # just the path of the downloaded file
@@ -45,8 +46,8 @@ class google_driver():
         finally:
             self.downloaded_file = None
 
-    def download_last_file(self) -> str:
-        """downloads the file that the last call to upload_file uploaded and returns the downloaded file's name"""
+    def download_last_file(self):
+        """downloads the file that the last call to upload_file uploaded and sets the downloaded_file var to the file's name"""
         if not self.is_last_file_uploaded():
             raise 'last_file is None'
 
@@ -59,7 +60,6 @@ class google_driver():
                 status, done = downloader.next_chunk()
                 df.write(fh.getbuffer())
             self.downloaded_file = df.name
-            return df.name
 
     def is_last_file_uploaded(self):
         if self.last_file is None:
@@ -101,8 +101,7 @@ class google_driver():
             self.service.files().delete(fileId=self.last_file[1]).execute()
             print(f"deleted {self.last_file[1]}")
         except HttpError as error:
-            print(
-                f"An error occurred while deleting fileId: {self.last_file[1]}", error)
+            print(f"An error occurred while deleting fileId: {self.last_file[1]}", error)
 
     def delete_file(self, fileId) -> bool:
         """given a fileId, deletes a file from google drive and return True if successful"""
