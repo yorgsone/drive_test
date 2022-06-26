@@ -10,7 +10,7 @@ DOWNLOADS_DIR = '.'
 def compare_files(a, b) -> bool:
     """computes the hash of each file and compares them
     returns True if they are the equal"""
-    BUF_SIZE = 65536
+    BUF_SIZE = 4096
 
     a_hashed = hashlib.sha1()
     b_hashed = hashlib.sha1()
@@ -96,16 +96,17 @@ class google_driver():
             return False
 
     def list_files(self) -> list:
+        """returns a list of tuples of all the files in the drive if successful and None if not |  (filename , fileId) format)"""
         pageToken = ''
         all_files_on_drive = []
-        print('Files:')
+        
         while pageToken is not None:
             try:
                 results = self.service.files().list(
                     pageToken=pageToken, fields="nextPageToken, files(id, name)").execute()
             except Exception as e:
-                print("failed to list google drive files", e)
-                return
+                print(e)
+                return None
             items = results.get('files', [])
             if not items:
                 print('No files found.')
@@ -139,12 +140,12 @@ class google_driver():
             return False
 
 gd = google_driver()
-#gd.upload_file('/Users/giorgosmaroulas/Downloads/fr_certificate_2021-2022_gemaroul.pdf')
+gd.upload_file('filepath_to_be_uploaded')
 all_files = gd.list_files()
 print(all_files)
-#gd.download_last_file()
-
-#print(gd.download_last_file())
-#if compare_files(gd.last_file[0], gd.downloaded_file):
-#    print("same files")
-#gd.delete_last_file()
+gd.download_last_file()
+if compare_files(gd.last_file[0], gd.downloaded_file):
+    print("a == b")
+else:
+    print("a != b")
+gd.delete_last_file()
