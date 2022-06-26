@@ -10,7 +10,7 @@ DOWNLOADS_DIR = '.'
 class google_driver():
     last_file = None  # tuple (file name, fileId)
     downloaded_file = None  # just the path of the downloaded file
-    service = None  # the client for google cloud api
+    service = None  # the client for the google api
 
     def __new__(cls):
         try:

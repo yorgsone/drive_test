@@ -5,8 +5,8 @@ def equal_file_hashes(a, b) -> bool:
     returns True if they are equal"""
     BUF_SIZE = 4096
 
-    a_hashed = hashlib.sha1()
-    b_hashed = hashlib.sha1()
+    a_hashed = hashlib.sha256()
+    b_hashed = hashlib.sha256()
    
     with open(a, 'rb') as f:
         while True:

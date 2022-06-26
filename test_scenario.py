@@ -5,6 +5,12 @@ from equal_file_hashes import equal_file_hashes
 
 GAC = 'GOOGLE_APPLICATION_CREDENTIALS'
 
+@pytest.mark.parametrize("file_a,file_b, expected", [
+    ('test_file.txt','test_file2.txt', False),
+    ('test_file.txt', 'test_file.txt', True)
+])
+def test_equal_file_hashes(file_a, file_b, expected):
+    assert equal_file_hashes(file_a, file_b) == expected
 
 @pytest.fixture
 def default_google_driver():
@@ -67,20 +73,20 @@ def test_download_and_delete_from_drive(default_google_driver, to_download):
     except Exception:
         assert False
 
-@pytest.mark.parametrize("file, result", [
+@pytest.mark.parametrize("file, expected", [
     ("test_file.txt", True),
     ("", FileNotFoundError())
 ])
-def test_scenario(default_google_driver, file, result):
+def test_scenario(default_google_driver, file, expected):
     gd = default_google_driver
     if gd is None:
         return
 
     try:
         uploaded = gd.upload_file(file)
-        assert gd.is_last_file_uploaded()
+        assert uploaded and gd.is_last_file_uploaded()
         gd.download_last_file()
         assert os.path.isfile(gd.downloaded_file)
         assert equal_file_hashes(file, gd.downloaded_file)
     except Exception as e:
-        assert type(e) == type(result)
+        assert type(e) == type(expected)
