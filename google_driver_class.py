@@ -1,39 +1,15 @@
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload, HttpError
+import os
 import io
 import tempfile
-import os
-import hashlib
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload, HttpError
 
 DOWNLOADS_DIR = '.'
 
-def compare_files(a, b) -> bool:
-    """computes the hash of each file and compares them
-    returns True if they are equal"""
-    BUF_SIZE = 4096
-
-    a_hashed = hashlib.sha1()
-    b_hashed = hashlib.sha1()
-   
-    with open(a, 'rb') as f:
-        while True:
-            data = f.read(BUF_SIZE)
-            if not data:
-                break
-            a_hashed.update(data)
-    
-    with open(b, 'rb') as f:
-        while True:
-            data = f.read(BUF_SIZE)
-            if not data:
-                break
-            b_hashed.update(data)
-    return a_hashed.hexdigest() == b_hashed.hexdigest()
-
 class google_driver():
-    last_file = None #tuple (file name, fileId)
-    downloaded_file = None #just the path of the downloaded file
-    service = None #the client for google cloud api
+    last_file = None  # tuple (file name, fileId)
+    downloaded_file = None  # just the path of the downloaded file
+    service = None  # the client for google cloud api
 
     def __new__(cls):
         try:
@@ -89,7 +65,8 @@ class google_driver():
         if self.last_file is None:
             return False
         try:
-            metadata = self.service.files().get(fileId=self.last_file[1], fields='id').execute()
+            metadata = self.service.files().get(
+                fileId=self.last_file[1], fields='id').execute()
             return True
         except Exception:
             return False
@@ -98,7 +75,7 @@ class google_driver():
         """returns a list of tuples of all the files in the drive if successful and None if not |  (filename , fileId) format)"""
         pageToken = ''
         all_files_on_drive = []
-        
+
         while pageToken is not None:
             try:
                 results = self.service.files().list(
@@ -124,9 +101,10 @@ class google_driver():
             self.service.files().delete(fileId=self.last_file[1]).execute()
             print(f"deleted {self.last_file[1]}")
         except HttpError as error:
-            print(f"An error occurred while deleting fileId: {self.last_file[1]}", error)
+            print(
+                f"An error occurred while deleting fileId: {self.last_file[1]}", error)
 
-    def delete_file(self, fileId)->bool:
+    def delete_file(self, fileId) -> bool:
         """given a fileId, deletes a file from google drive and return True if successful"""
         if fileId == '' or fileId == None:
             return False
@@ -137,14 +115,3 @@ class google_driver():
         except HttpError as error:
             print(f"An error occurred while deleting fileId: {fileId}", error)
             return False
-
-gd = google_driver()
-gd.upload_file('filepath_to_be_uploaded')
-all_files = gd.list_files()
-print(all_files)
-gd.download_last_file()
-if compare_files(gd.last_file[0], gd.downloaded_file):
-    print("a == b")
-else:
-    print("a != b")
-gd.delete_last_file()

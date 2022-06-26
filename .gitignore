@@ -1,3 +1,4 @@
 credentials*
 *.txt
 tmp*
+__pycache__
