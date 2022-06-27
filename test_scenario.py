@@ -5,7 +5,7 @@ from equal_file_hashes import equal_file_hashes
 
 GAC = 'GOOGLE_APPLICATION_CREDENTIALS'
 
-@pytest.mark.parametrize("file_a,file_b, expected", [
+@pytest.mark.parametrize('file_a,file_b, expected', [
     ('test_file.txt','test_file2.txt', False),
     ('test_file.txt', 'test_file.txt', True)
 ])
@@ -26,9 +26,9 @@ def test_credentials(default_google_driver):
         or (os.path.isfile(creds_env) and gd == None)\
         or gd != None
 
-@pytest.mark.parametrize("failing_to_upload", [
-    "",
-    "filedoesntexist",
+@pytest.mark.parametrize('failing_to_upload', [
+    '',
+    'filedoesntexist',
 ])
 def test_failed_upload(default_google_driver, failing_to_upload):
     gd = default_google_driver
@@ -41,8 +41,8 @@ def test_failed_upload(default_google_driver, failing_to_upload):
     except FileNotFoundError:
         return
 
-@pytest.mark.parametrize("to_upload", [
-    "test_file.txt"
+@pytest.mark.parametrize('to_upload', [
+    'test_file.txt'
 ])
 def test_upload(default_google_driver, to_upload):
     gd = default_google_driver
@@ -55,8 +55,8 @@ def test_upload(default_google_driver, to_upload):
     except Exception:
         assert False
 
-@pytest.mark.parametrize("to_download", [
-    "test_file.txt"
+@pytest.mark.parametrize('to_download', [
+    'test_file.txt'
 ])
 def test_download_and_delete_from_drive(default_google_driver, to_download):
     gd = default_google_driver
@@ -75,7 +75,7 @@ def test_download_and_delete_from_drive(default_google_driver, to_download):
 
 @pytest.mark.parametrize("file, expected", [
     ("test_file.txt", True),
-    ("", FileNotFoundError())
+    ('', FileNotFoundError())
 ])
 def test_scenario(default_google_driver, file, expected):
     gd = default_google_driver
