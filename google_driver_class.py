@@ -100,8 +100,8 @@ class google_driver():
         try:
             self.service.files().delete(fileId=self.last_file[1]).execute()
             print(f"deleted {self.last_file[1]}")
-        except HttpError as error:
-            print(f"An error occurred while deleting fileId: {self.last_file[1]}", error)
+        except Exception as e:
+            print(f"An error occurred while deleting fileId: {self.last_file[1]}", e)
 
     def delete_file(self, fileId) -> bool:
         """given a fileId, deletes a file from google drive and return True if successful"""
